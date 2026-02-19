@@ -1,0 +1,42 @@
+{
+  "name": "civilllm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "^5.18.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "geist": "^1.5.1",
+    "isomorphic-dompurify": "^3.0.0-rc.2",
+    "next": "14.2.5",
+    "next-auth": "^4.24.7",
+    "openai": "^6.17.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "uuid": "^10.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5",
+    "prisma": "^5.18.0",
+    "typescript": "^5.5.4"
+  }
+}

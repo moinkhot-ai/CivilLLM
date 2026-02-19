@@ -1,0 +1,295 @@
+// Prisma schema for CivilLLM - Civil Engineering AI Assistant
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User roles for access control
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+// Document indexing status
+enum IndexingStatus {
+  PENDING
+  PROCESSING
+  INDEXED
+  FAILED
+}
+
+// Feedback type
+enum FeedbackType {
+  HELPFUL
+  NOT_HELPFUL
+  FLAG
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  hashedPassword String?
+  role          Role      @default(USER)
+  emailVerified DateTime?
+  
+  // Preferences
+  preferredDomain String?
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  conversations Conversation[]
+  savedAnswers  SavedAnswer[]
+  feedback      Feedback[]
+  documents     Document[]  // Documents uploaded by admin
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// DOMAINS (Engineering Specialty Areas)
+// ============================================
+
+model Domain {
+  id          String   @id @default(uuid())
+  name        String   @unique // site, rcc, steel, safety
+  displayName String   // Site Bot, RCC Bot, etc.
+  description String?
+  icon        String?  // Icon identifier
+  color       String?  // Theme color
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  
+  // Prompt template for this domain
+  systemPrompt String? @db.Text
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  documents     Document[]
+  conversations Conversation[]
+
+  @@map("domains")
+}
+
+// ============================================
+// DOCUMENTS & CHUNKS (Knowledge Base)
+// ============================================
+
+model Document {
+  id            String         @id @default(uuid())
+  title         String         // IS 456:2000
+  filename      String
+  fileUrl       String?        // S3/storage URL
+  fileSize      Int?
+  mimeType      String?
+  
+  // Metadata
+  codeNumber    String?        // IS 456, NBC 2016
+  version       String?        // 2000, 2016
+  year          Int?
+  jurisdiction  String?        // National, State-specific
+  
+  // Indexing
+  status        IndexingStatus @default(PENDING)
+  chunkCount    Int            @default(0)
+  indexedAt     DateTime?
+  indexError    String?
+  
+  // Version control
+  versionLabel  String?
+  previousVersionId String?
+  
+  // Admin
+  uploadedById  String?
+  uploadedBy    User?          @relation(fields: [uploadedById], references: [id])
+  
+  // Domain association
+  domainId      String?
+  domain        Domain?        @relation(fields: [domainId], references: [id])
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  chunks        Chunk[]
+
+  @@map("documents")
+}
+
+model Chunk {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Content
+  content     String   @db.Text
+  tokenCount  Int?
+  
+  // Location in document
+  chunkIndex  Int
+  pageNumber  Int?
+  clauseNumber String? // Extracted clause reference
+  sectionTitle String?
+  
+  // Embedding (stored in vector DB, ID reference here)
+  embeddingId String?
+  
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+  @@map("chunks")
+}
+
+// ============================================
+// CONVERSATIONS & MESSAGES
+// ============================================
+
+model Conversation {
+  id        String   @id @default(uuid())
+  title     String?  // Auto-generated from first question
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  domainId  String?
+  domain    Domain?  @relation(fields: [domainId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  messages  Message[]
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Content
+  role           String   // user, assistant
+  content        String   @db.Text
+  
+  // AI Response metadata (for assistant messages)
+  summary        String?  @db.Text
+  sources        Json?    // Array of source citations
+  confidence     Float?
+  latencyMs      Int?
+  modelUsed      String?
+  
+  // Timestamps
+  createdAt      DateTime @default(now())
+
+  // Relations
+  feedback       Feedback[]
+  savedAnswers   SavedAnswer[]
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// ============================================
+// SAVED ANSWERS & FEEDBACK
+// ============================================
+
+model SavedAnswer {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  note      String?  // User's personal note
+  
+  createdAt DateTime @default(now())
+
+  @@unique([userId, messageId])
+  @@index([userId])
+  @@map("saved_answers")
+}
+
+model Feedback {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  messageId String
+  message   Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  type      FeedbackType
+  comment   String?      @db.Text
+  
+  // For flagged items
+  status    String?      // open, reviewing, resolved
+  resolvedAt DateTime?
+  resolvedBy String?
+  
+  createdAt DateTime     @default(now())
+
+  @@index([messageId])
+  @@index([type, status])
+  @@map("feedback")
+}

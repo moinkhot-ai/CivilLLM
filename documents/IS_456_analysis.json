@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "Creator": "pdftk 1.44 - www.pdftk.com",
+    "Producer": "itext-paulo-155 (itextpdf.sf.net-lowagie.com)",
+    "ModDate": "D:20130905090305-07'00'",
+    "CreationDate": "D:20130905090305-07'00'",
+    "Author": "Bureau of Indian Standards",
+    "Subject": "Published Under the Right to Information Act",
+    "Title": "IS 456 (2000): Plain and Reinforced Concrete - Code of Practice"
+  },
+  "structure": {},
+  "sample_pages": [
+    {
+      "page_num": 1,
+      "text_preview": "\u0907\u0902\u091f\u0930\u0928\u0947\u091f \u092e\u093e\u0928\u0915\nDisclosure to Promote the Right To Information\nWhereas the Parliament of India has set out to provide a practical regime of right to\ninformation for citizens to secure access to information under the control of public authorities,\nin order to promote transparency and accountability in the working of every public authority,\nand whereas the attached publication of the Bureau of Indian Standards is of particular interest\nto the public, particularly disadvantaged communities and those e",
+      "tables_count": 0
+    },
+    {
+      "page_num": 2,
+      "text_preview": null,
+      "tables_count": 0
+    },
+    {
+      "page_num": 3,
+      "text_preview": null,
+      "tables_count": 0
+    },
+    {
+      "page_num": 4,
+      "text_preview": "IS.456 :2000\n(R\u2022\u2022fflrmed2005)\nIndian Standard\nPLAIN AND REINFORCED CONCRETE\nCODE OF PRACTICE\n( Fourth Revision)\nTenth Reprint APRIL2007\n(IncludingAmendmentsNo.Iand2)\nICS 91.100.30\nC BI52000\nBUREAU OF INDIAN STANDARDS\nMANAK BHAVAN. 9 B AHADUR SHAH ZAFAR MARG\nNEW DELIiI 110002\nJuly 2000 Price Rs. 830.09+Rs. 120.09",
+      "tables_count": 0
+    },
+    {
+      "page_num": 5,
+      "text_preview": "IS456:2000\nCONTENTS\nPAGE\nSECTION 1 GENERAL\nJ SCOPE )J\n2 REFERBNCES 11\n3 TERMINOLOGY 11\n4 SVMBOU 11\nSECTION2 MATERIALS,WORKMANSHIP, INSPECTIONANDTESTING\n5 MATERIALS 13\n5.1 Cement 13\n5.2 MineralAdmixtures 13\n5.3 Aggregates 14\n5.4 Water 14\n5.5 Admixtures IS\n5.6 Reinforcement 15\n5.7 StorageofMaterials 15\n6 CONCRETE 15\n6.1 Grades 15\n6.2 PropertiesofConcrete 15\n7 WORKABIUTYOFCONCRETE 17\n8 DURABILITYOFCONCRETE 17\n8.1 General 17\n8.2 RequirementsforDurability 18\n9 CONCRETEMIX PROPORTIONING 22\n9.1 MixProp",
+      "tables_count": 0
+    },
+    {
+      "page_num": 6,
+      "text_preview": "IS456: ZOOO\nPAGE\n13.4 ConstructionJointsandColdJoints 27\n13.5 Curing 27\n13.6 Supervision 27\n14 CONCRETINGUNDERSPECIALCosornoss 27\n14.1 WorkinExtremeWeatherConditions 27\n14.2 Under-WaterConcreting 27\n15 SAMPLINGANDSTRENGTHOFDESIGNED CONCRETEMIX 29\n15.1 General 29\n15.2 FrequencyofSampling 29\nIS.3 TestSpecimen 29\n15.4 TestResultsofSample 29\n16 ACCEPTANCECRITERIA 29\n17 INS\"EcrlONANDTESTINGOFSTRUCTURE 30\nSECTION 3 GENERALDESIGN CONSIDERATION\n18 BASESRlR DESIGN 32\n18.1 AimofDesign 32\n18.2 MethodsofDes",
+      "tables_count": 0
+    },
+    {
+      "page_num": 7,
+      "text_preview": "IS 456: 2000\nPAGE\n22.4 StructuralFrames 35\n22.5 Momentand ShearCoefficientsforContinuous Beams 35\n22.6 Critical Sectionsfor Momentand Shear 36\n22.7 Redistribution ofMoments 36\n23 BEAMS 36\n23.0 EffectiveDepth 36\n23.1 T-Beams and L-Beams 36\n23.2 Control ofDeflection 37\n23.3 SlendernessLimits for Beamsto EnsureLateral Stability 39\n24 SOLID SLABS 39\n24.1 General 39\n24.2 SlabsContinuousOverSupports 39\n24.3 SlabsMonolithic with Supports 39\n24.4 SlabsSpanning inTwo Directionsat RightAngles 41\n24.5 Load",
+      "tables_count": 0
+    },
+    {
+      "page_num": 8,
+      "text_preview": "IS456: 2000\nPAGB\n30.5 Sizeand PositionofRibs S2\n30.6 HollowBlocksandFormers 52\n30.7 ArrangementofReinforcement 53\n30.8 PrecastJoistsand HollowFillerBlocks 53\n31 FLATSLABS .53\n31.1 General 53\n31.2 Proportioning S3\n31.3 DetenninationofBendin. Moment S3\n31.4 Direct DesipMethod 54\n31.5 EquivalentFnmeMethod 5'6\n31.6 ShearinFlatSlab S1\n31.7 SlabReinforcement .59\n31.8 OpeningsinFlatSlabs 61\n32 WAUS 61\n32.1 General 61\n32.2 EmpiricalDesignMethodforWall~SubjectedtoInplaneVerticalLoads 61\n32.3 WallsSubject",
+      "tables_count": 0
+    },
+    {
+      "page_num": 9,
+      "text_preview": "IS 456:1000\nPAGE\n38 LIMITSTATBOPCOLLAPSE:FLEXURE 69\n38.1 A.lumptions 69\n39 LIMITSTATBOFCOUAPSS:COMPRESSION 70\n39.1 Assumptions 70\n39.2 MinimumEccentricity 71\n39.3 ShortAxiallyLoadedMembersinCompression 71\n39.4 CompressionMemberswithHelicalReinforcement 71\n39.5 Memben SubjectedtoCombinedAxialLoadandU~iaxialBendins 71\n39.6 MembenSubjectedtoCombinedAxialLoadandBiaxialBending 71\n39.7 SlenderCompressionMembers 71\n40 LlMrrSTATSOPCOLLAPSE:SHEAR 72\n40.1 Nominal Shear Stress 72\n40.2 DesianShearStrensthof",
+      "tables_count": 0
+    },
+    {
+      "page_num": 10,
+      "text_preview": "IS456:~\nPAGI\nB-4 MEMBBRSSUlJBCTIDTOCOMBINEDAxIALloADANDBINDING 83\n8-4.1 De,iIDBaedonUncrackedSection 83\nB-4.2 DelilftBaedonCrackedSection 83\nB-4.3 MembersSubjectedtoCombinedDirectLoad andFlexure 83\nD-S SHEAR 83\nB-S,1 Nominal ShearStress . 83\nB-5,2 neaipShearStrenlthofConcrete 84\nB-S.3 MinimumShearReinforcement 8S\nB-5.4 DesilnofShearReinforcement 85\nB\u00b7'.' EnhancedShearStrengthofSectionsClosetoSupports 8S\nB-6 TORSION 86\nB-6.1 General 86\nB-6.2 CriticalSection 86\nB-6.3 ShearandTorsion 86\nB-6.4 Reinf",
+      "tables_count": 0
+    }
+  ],
+  "tables_found": 0,
+  "total_pages": 114,
+  "sections": []
+}
