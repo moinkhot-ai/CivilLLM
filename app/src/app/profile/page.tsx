@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { CivilLLMLogo } from '@/components/icons/BotIcons';
 
 export default function ProfilePage() {
@@ -63,17 +63,34 @@ export default function ProfilePage() {
                     <CivilLLMLogo size={32} />
                     <span style={{ fontSize: 18, fontWeight: 700, color: '#1e40af' }}>CivilLLM</span>
                 </Link>
-                <Link href="/chat" style={{
-                    padding: '8px 16px',
-                    background: '#2563eb',
-                    color: 'white',
-                    borderRadius: 8,
-                    textDecoration: 'none',
-                    fontSize: 14,
-                    fontWeight: 500
-                }}>
-                    Back to Chat
-                </Link>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        style={{
+                            padding: '8px 16px',
+                            background: 'white',
+                            color: '#dc2626',
+                            border: '1px solid #fee2e2',
+                            borderRadius: 8,
+                            fontSize: 14,
+                            fontWeight: 500,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Sign Out
+                    </button>
+                    <Link href="/chat" style={{
+                        padding: '8px 16px',
+                        background: '#2563eb',
+                        color: 'white',
+                        borderRadius: 8,
+                        textDecoration: 'none',
+                        fontSize: 14,
+                        fontWeight: 500
+                    }}>
+                        Back to Chat
+                    </Link>
+                </div>
             </header>
 
             {/* Main Content */}
