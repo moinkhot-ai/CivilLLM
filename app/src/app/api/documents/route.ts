@@ -1,7 +1,7 @@
 /**
  * Documents API Route
  * 
- * Handles document listing and upload with rate limiting and validation.
+ * Handles document listing, upload, and deletion with rate limiting and validation.
  * Security-hardened following OWASP best practices.
  */
 
@@ -94,7 +94,7 @@ const documents: Map<string, Document> = new Map([
 ]);
 
 // ============================================
-// GET - List all documents
+// GET - List documents (with optional domain filter)
 // ============================================
 
 export async function GET(request: NextRequest) {
@@ -106,7 +106,16 @@ export async function GET(request: NextRequest) {
             return rateLimitResponse;
         }
 
-        const docs = Array.from(documents.values());
+        // Support ?domainId=rcc filtering
+        const { searchParams } = new URL(request.url);
+        const domainFilter = searchParams.get('domainId');
+
+        let docs = Array.from(documents.values());
+
+        if (domainFilter) {
+            docs = docs.filter(d => d.domainId === domainFilter);
+        }
+
         return NextResponse.json({ documents: docs });
     } catch (error) {
         console.error('Documents GET error:', error);
@@ -211,11 +220,6 @@ export async function POST(request: NextRequest) {
 
         documents.set(docId, document);
 
-        // In production, this would:
-        // 1. Upload file to object storage
-        // 2. Queue document for processing (OCR, chunking, embedding)
-        // 3. Return document ID for status tracking
-
         // Simulate processing delay and status update
         setTimeout(() => {
             const doc = documents.get(docId);
@@ -244,6 +248,45 @@ export async function POST(request: NextRequest) {
         console.error('Documents POST error:', error);
         return NextResponse.json(
             { error: 'An error occurred while uploading the document' },
+            { status: 500 }
+        );
+    }
+}
+
+// ============================================
+// DELETE - Remove a document
+// ============================================
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const docId = searchParams.get('id');
+
+        if (!docId) {
+            return NextResponse.json(
+                { error: 'Document ID is required' },
+                { status: 400 }
+            );
+        }
+
+        const doc = documents.get(docId);
+        if (!doc) {
+            return NextResponse.json(
+                { error: 'Document not found' },
+                { status: 404 }
+            );
+        }
+
+        documents.delete(docId);
+
+        return NextResponse.json({
+            success: true,
+            message: `Document "${doc.title}" deleted successfully`,
+        });
+    } catch (error) {
+        console.error('Documents DELETE error:', error);
+        return NextResponse.json(
+            { error: 'An error occurred while deleting the document' },
             { status: 500 }
         );
     }
