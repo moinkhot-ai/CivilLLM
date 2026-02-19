@@ -1,23 +1,15 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import { prisma } from './prisma'; // Import prisma client
 
-// Demo mode: In-memory user storage (shared with signup route)
-// In production, this would use Prisma/database
-const demoUsers: Map<string, { id: string; email: string; name: string; hashedPassword: string; role: string }> = new Map();
+// Demo mode code removed for production
 
-// Add a demo user for easy testing
-demoUsers.set('demo@civilllm.com', {
-    id: 'demo-user-1',
-    email: 'demo@civilllm.com',
-    name: 'Demo User',
-    hashedPassword: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4aLQHkMKQgZkKmHe', // password: demo1234
-    role: 'USER',
-});
 
 export const authOptions: NextAuthOptions = {
-    // No adapter in demo mode - using JWT only
+    adapter: PrismaAdapter(prisma),
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || 'demo-client-id',
@@ -30,31 +22,39 @@ export const authOptions: NextAuthOptions = {
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
+                console.log('🔐 [AUTH] Attempting login for:', credentials?.email);
+
                 if (!credentials?.email || !credentials?.password) {
-                    throw new Error('Email and password are required');
+                    console.log('❌ [AUTH] Missing email or password');
+                    throw new Error('Invalid credentials');
                 }
 
-                // Check demo users
-                const user = demoUsers.get(credentials.email);
+                const user = await prisma.user.findUnique({
+                    where: {
+                        email: credentials.email
+                    }
+                });
 
-                if (!user) {
-                    // For demo: allow any signup to work by creating user on-the-fly
-                    console.log('Demo mode: User not found, trying to authenticate anyway');
-                    throw new Error('Invalid email or password. Try demo@civilllm.com with password: demo1234');
+                if (!user || !user.hashedPassword) {
+                    console.log('❌ [AUTH] User not found or no password hash:', credentials.email);
+                    throw new Error('Invalid credentials');
                 }
 
-                const isValid = await bcrypt.compare(credentials.password, user.hashedPassword);
-                if (!isValid) {
-                    throw new Error('Invalid email or password');
+                const isCorrectPassword = await bcrypt.compare(
+                    credentials.password,
+                    user.hashedPassword
+                );
+
+                console.log('🔍 [AUTH] Password check result:', isCorrectPassword);
+
+                if (!isCorrectPassword) {
+                    console.log('❌ [AUTH] Password mismatch for:', credentials.email);
+                    throw new Error('Invalid credentials');
                 }
 
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                };
-            },
+                console.log('✅ [AUTH] Login successful for:', user.email);
+                return user;
+            }
         }),
     ],
     session: {
@@ -84,20 +84,8 @@ export const authOptions: NextAuthOptions = {
     debug: process.env.NODE_ENV === 'development',
 };
 
-export default NextAuth(authOptions);
 
-// Helper to register demo users (called from signup API)
-export function registerDemoUser(email: string, name: string, hashedPassword: string): string {
-    const id = `demo-${Date.now()}`;
-    demoUsers.set(email, { id, email, name, hashedPassword, role: 'USER' });
-    return id;
-}
-
-// Helper to check if demo user exists
-export function getDemoUser(email: string) {
-    return demoUsers.get(email);
-}
-
+// Helper functions
 export async function hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
 }

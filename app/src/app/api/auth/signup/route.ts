@@ -6,7 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { hashPassword, registerDemoUser, getDemoUser } from '@/lib/auth';
+import { hashPassword } from '@/lib/auth'; // Removed registerDemoUser, getDemoUser
+import { prisma } from '@/lib/prisma'; // Import prisma
 import { createRateLimiter, RATE_LIMITS } from '@/lib/security/rate-limit';
 import { validateRequest, signupRequestSchema } from '@/lib/security/validation';
 import { logSecurityEvent } from '@/lib/security/config';
@@ -27,7 +28,7 @@ const signupLimiter = createRateLimiter({
 
 export async function POST(request: NextRequest) {
     try {
-        // Apply rate limiting (always IP-based for signup since user doesn't exist yet)
+        // ... (rate limiting and body parsing remains same)
         const rateLimitResponse = signupLimiter(request);
         if (rateLimitResponse) {
             logSecurityEvent('rate_limit', { endpoint: '/api/auth/signup' });
@@ -60,11 +61,12 @@ export async function POST(request: NextRequest) {
 
         const { name, email, password } = validation.data;
 
-        // Check if user already exists
-        // Note: Use constant-time comparison in production to prevent timing attacks
-        if (getDemoUser(email)) {
-            // Don't reveal whether email exists (security best practice)
-            // But for demo purposes, we provide helpful error
+        // Check if user already exists in DB
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
             logSecurityEvent('auth_failure', {
                 endpoint: '/api/auth/signup',
                 reason: 'email_exists'
@@ -75,25 +77,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Hash password with bcrypt (cost factor 12)
+        // Hash password
         const hashedPassword = await hashPassword(password);
 
-        // Create user (name is already sanitized by schema)
-        const userId = registerDemoUser(
-            email,
-            name || email.split('@')[0],
-            hashedPassword
-        );
+        // Create user in DB
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                name: name || email.split('@')[0],
+                hashedPassword,
+                role: 'USER', // Default role
+            },
+        });
 
-        console.log('Demo user created:', email);
+        console.log('✅ User created:', email);
 
-        // Return success (don't include password hash!)
         return NextResponse.json({
-            id: userId,
-            email,
-            name: name || email.split('@')[0],
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
             message: 'Account created! You can now log in.',
         });
+
     } catch (error) {
         console.error('Signup error:', error);
         return NextResponse.json(

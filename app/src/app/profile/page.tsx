@@ -1,16 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { CivilLLMLogo } from '@/components/icons/BotIcons';
 
 export default function ProfilePage() {
+    const { data: session, status } = useSession();
     const [user, setUser] = useState({
-        name: 'Guest User',
-        email: 'guest@example.com',
+        name: 'Loading...',
+        email: '...',
         role: 'USER',
         preferredDomain: 'best',
     });
+
+    useEffect(() => {
+        if (session?.user) {
+            setUser({
+                name: session.user.name || 'User',
+                email: session.user.email || '',
+                role: (session.user as any).role || 'USER', // Cast to any to access custom property
+                preferredDomain: 'best', // TODO: Store preferences in DB
+            });
+            setFormData({
+                name: session.user.name || 'User',
+                email: session.user.email || '',
+                role: (session.user as any).role || 'USER',
+                preferredDomain: 'best',
+            });
+        }
+    }, [session]);
 
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({ ...user });

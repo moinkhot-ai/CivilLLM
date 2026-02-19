@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Nunito } from 'next/font/google';
 import '@/styles/globals.css';
+import { Providers } from './providers';
 
 const nunito = Nunito({
     subsets: ['latin'],
@@ -41,7 +42,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={nunito.variable} suppressHydrationWarning>
             <body className={nunito.className} suppressHydrationWarning>
-                {children}
+                <Providers>{children}</Providers>
             </body>
         </html>
     );

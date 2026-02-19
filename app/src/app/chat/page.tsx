@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -264,6 +265,7 @@ const responsiveCSS = `
 
 
 function ChatContent() {
+    const { data: session } = useSession();
     const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -471,7 +473,9 @@ function ChatContent() {
 
                     <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #374151' }}>
                         <Link href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: 12, color: '#d1d5db', textDecoration: 'none', borderRadius: 10 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: '#2563eb', borderRadius: '50%', fontSize: 14, fontWeight: 700, color: 'white' }}>U</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: '#2563eb', borderRadius: '50%', fontSize: 14, fontWeight: 700, color: 'white' }}>
+                                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
                             <span style={{ flex: 1, fontSize: 14 }}>Profile</span>
                         </Link>
                     </div>
