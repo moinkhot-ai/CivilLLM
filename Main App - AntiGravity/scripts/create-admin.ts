@@ -23,7 +23,7 @@ async function createAdminUser() {
                 where: { email },
                 data: {
                     role: 'ADMIN',
-                    password: hashedPassword
+                    hashedPassword: hashedPassword
                 }
             });
             console.log('✅ User updated to ADMIN:', user.email);
@@ -33,7 +33,7 @@ async function createAdminUser() {
                 data: {
                     email,
                     name,
-                    password: hashedPassword,
+                    hashedPassword: hashedPassword,
                     role: 'ADMIN',
                 }
             });

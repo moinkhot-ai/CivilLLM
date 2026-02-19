@@ -46,7 +46,7 @@ class VectorStore {
             if (domain === 'rcc') {
                 // Use V2 chunks with actual content (not TOC entries)
                 const chunksPath = path.join(
-                    'C:', 'Users', 'moink', 'Desktop', 'CivilLLM', 'documents', 'IS_456_2000_v2_with_embeddings.json'
+                    process.cwd(), 'public', 'data', 'IS_456_2000_v2_with_embeddings.json'
                 );
 
                 // Check if pre-computed embeddings exist
