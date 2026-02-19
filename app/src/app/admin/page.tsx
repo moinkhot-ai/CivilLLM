@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import styles from './admin.module.css';
 import { CivilLLMLogo } from '@/components/icons/BotIcons';
 
@@ -29,17 +31,30 @@ interface BotTab {
     color: string;
     bgColor: string;
     description: string;
+    category: 'primary' | 'specialty';
 }
 
+// All bots excluding "Best" and "General"
 const BOT_TABS: BotTab[] = [
-    { id: 'site', name: 'Site Bot', icon: '🏗️', color: '#2563eb', bgColor: '#eff6ff', description: 'Site engineering standards & measurement codes' },
-    { id: 'rcc', name: 'RCC Bot', icon: '🧱', color: '#ea580c', bgColor: '#fff7ed', description: 'Reinforced concrete codes & design standards' },
-    { id: 'steel', name: 'Steel Bot', icon: '🔩', color: '#7c3aed', bgColor: '#f5f3ff', description: 'Structural steel design codes & specifications' },
-    { id: 'safety', name: 'Safety Bot', icon: '⚠️', color: '#dc2626', bgColor: '#fef2f2', description: 'Safety regulations & building codes' },
+    // Primary Experts
+    { id: 'rcc', name: 'RCC', icon: '🧱', color: '#2563eb', bgColor: '#eff6ff', description: 'Reinforced concrete design, IS 456 codes', category: 'primary' },
+    { id: 'steel', name: 'Steel', icon: '🔩', color: '#64748b', bgColor: '#f8fafc', description: 'Structural steel design, IS 800 codes', category: 'primary' },
+    { id: 'site', name: 'Site', icon: '🏗️', color: '#f97316', bgColor: '#fff7ed', description: 'Site execution, curing, quality control', category: 'primary' },
+    { id: 'surveying', name: 'Surveying', icon: '📐', color: '#22c55e', bgColor: '#f0fdf4', description: 'Land surveying, setting out, leveling', category: 'primary' },
+    // Specialty Experts
+    { id: 'geotechnical', name: 'Geotechnical', icon: '⛏️', color: '#a16207', bgColor: '#fefce8', description: 'Soil mechanics, foundations, earth works', category: 'specialty' },
+    { id: 'masonry', name: 'Masonry', icon: '🧱', color: '#dc2626', bgColor: '#fef2f2', description: 'Brick, block masonry, mortar mixes', category: 'specialty' },
+    { id: 'mep', name: 'MEP', icon: '⚡', color: '#06b6d4', bgColor: '#ecfeff', description: 'Mechanical, Electrical, Plumbing systems', category: 'specialty' },
+    { id: 'roads', name: 'Roads & Highways', icon: '🛣️', color: '#d97706', bgColor: '#fffbeb', description: 'Road design, pavement, IRC codes', category: 'specialty' },
+    { id: 'water', name: 'Water & Sanitation', icon: '💧', color: '#0d9488', bgColor: '#f0fdfa', description: 'Water supply, drainage, sewerage', category: 'specialty' },
+    { id: 'qs', name: 'QS & Estimation', icon: '📊', color: '#ec4899', bgColor: '#fdf2f8', description: 'Quantity surveying, BOQ, costing', category: 'specialty' },
+    { id: 'nbc', name: 'NBC', icon: '📗', color: '#10b981', bgColor: '#ecfdf5', description: 'National Building Code compliance', category: 'specialty' },
 ];
 
 export default function AdminPage() {
-    const [activeTab, setActiveTab] = useState('site');
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState('rcc');
     const [documents, setDocuments] = useState<Document[]>([]);
     const [allDocCounts, setAllDocCounts] = useState<Record<string, number>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +71,19 @@ export default function AdminPage() {
     });
 
     const activeBot = BOT_TABS.find(b => b.id === activeTab)!;
+
+    // Auth guard — redirect non-admins
+    useEffect(() => {
+        if (status === 'loading') return;
+        if (!session) {
+            router.push('/login');
+            return;
+        }
+        const role = (session.user as { role?: string })?.role;
+        if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+            router.push('/chat');
+        }
+    }, [session, status, router]);
 
     // Fetch documents for the active tab
     const fetchDocuments = useCallback(async () => {
@@ -88,12 +116,12 @@ export default function AdminPage() {
     }, []);
 
     useEffect(() => {
-        fetchDocuments();
-    }, [fetchDocuments]);
+        if (session) fetchDocuments();
+    }, [fetchDocuments, session]);
 
     useEffect(() => {
-        fetchAllCounts();
-    }, [fetchAllCounts]);
+        if (session) fetchAllCounts();
+    }, [fetchAllCounts, session]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -115,7 +143,7 @@ export default function AdminPage() {
             formData.append('version', uploadForm.version);
             formData.append('year', uploadForm.year);
             formData.append('jurisdiction', uploadForm.jurisdiction);
-            formData.append('domainId', activeTab); // Auto-assign to active bot
+            formData.append('domainId', activeTab);
 
             const res = await fetch('/api/documents', {
                 method: 'POST',
@@ -178,6 +206,27 @@ export default function AdminPage() {
         );
     };
 
+    // Show loading while checking auth
+    if (status === 'loading') {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f9fafb' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <span className="spinner" />
+                    <p style={{ marginTop: 12, color: '#6b7280' }}>Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render anything if not admin (redirect happening)
+    const role = (session?.user as { role?: string })?.role;
+    if (!session || (role !== 'ADMIN' && role !== 'SUPERADMIN')) {
+        return null;
+    }
+
+    const primaryBots = BOT_TABS.filter(b => b.category === 'primary');
+    const specialtyBots = BOT_TABS.filter(b => b.category === 'specialty');
+
     return (
         <div className={styles.adminPage}>
             {/* Sidebar */}
@@ -193,21 +242,7 @@ export default function AdminPage() {
                             <rect x="3" y="3" width="14" height="14" rx="2" />
                             <path d="M3 8h14M8 8v9" />
                         </svg>
-                        Dashboard
-                    </Link>
-                    <Link href="/admin/documents" className={styles.navItem}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <path d="M4 4v12a2 2 0 002 2h8a2 2 0 002-2V8l-4-4H6a2 2 0 00-2 2z" />
-                            <path d="M12 4v4h4" />
-                        </svg>
-                        Documents
-                    </Link>
-                    <Link href="/admin/users" className={styles.navItem}>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <circle cx="10" cy="6" r="3" />
-                            <path d="M4 18v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
-                        </svg>
-                        Users
+                        RAG Documents
                     </Link>
                 </nav>
 
@@ -227,56 +262,110 @@ export default function AdminPage() {
                     </div>
                 </header>
 
-                {/* Bot Tabs */}
-                <div style={{
-                    display: 'flex',
-                    gap: 8,
-                    marginBottom: 24,
-                    borderBottom: '2px solid #e5e7eb',
-                    paddingBottom: 0,
-                }}>
-                    {BOT_TABS.map(bot => (
-                        <button
-                            key={bot.id}
-                            onClick={() => setActiveTab(bot.id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                padding: '12px 20px',
-                                fontSize: 14,
-                                fontWeight: 600,
-                                color: activeTab === bot.id ? bot.color : '#6b7280',
-                                background: activeTab === bot.id ? bot.bgColor : 'transparent',
-                                border: 'none',
-                                borderBottom: activeTab === bot.id ? `3px solid ${bot.color}` : '3px solid transparent',
-                                borderRadius: '8px 8px 0 0',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                position: 'relative',
-                            }}
-                        >
-                            <span style={{ fontSize: 18 }}>{bot.icon}</span>
-                            {bot.name}
-                            {(allDocCounts[bot.id] || 0) > 0 && (
-                                <span style={{
-                                    display: 'inline-flex',
+                {/* Primary Experts Tabs */}
+                <div style={{ marginBottom: 4 }}>
+                    <h4 style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, paddingLeft: 4 }}>
+                        Primary Experts
+                    </h4>
+                    <div style={{
+                        display: 'flex',
+                        gap: 4,
+                        flexWrap: 'wrap',
+                    }}>
+                        {primaryBots.map(bot => (
+                            <button
+                                key={bot.id}
+                                onClick={() => setActiveTab(bot.id)}
+                                style={{
+                                    display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    minWidth: 20,
-                                    height: 20,
-                                    padding: '0 6px',
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    color: 'white',
-                                    background: activeTab === bot.id ? bot.color : '#9ca3af',
-                                    borderRadius: 10,
-                                }}>
-                                    {allDocCounts[bot.id]}
-                                </span>
-                            )}
-                        </button>
-                    ))}
+                                    gap: 6,
+                                    padding: '8px 14px',
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    color: activeTab === bot.id ? 'white' : '#6b7280',
+                                    background: activeTab === bot.id ? bot.color : '#f3f4f6',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                }}
+                            >
+                                <span style={{ fontSize: 15 }}>{bot.icon}</span>
+                                {bot.name}
+                                {(allDocCounts[bot.id] || 0) > 0 && (
+                                    <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        minWidth: 18,
+                                        height: 18,
+                                        padding: '0 5px',
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        color: activeTab === bot.id ? bot.color : 'white',
+                                        background: activeTab === bot.id ? 'white' : '#9ca3af',
+                                        borderRadius: 9,
+                                    }}>
+                                        {allDocCounts[bot.id]}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Specialty Experts Tabs */}
+                <div style={{ marginBottom: 20 }}>
+                    <h4 style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, marginTop: 12, paddingLeft: 4 }}>
+                        Specialty Experts
+                    </h4>
+                    <div style={{
+                        display: 'flex',
+                        gap: 4,
+                        flexWrap: 'wrap',
+                    }}>
+                        {specialtyBots.map(bot => (
+                            <button
+                                key={bot.id}
+                                onClick={() => setActiveTab(bot.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    padding: '8px 14px',
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    color: activeTab === bot.id ? 'white' : '#6b7280',
+                                    background: activeTab === bot.id ? bot.color : '#f3f4f6',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                }}
+                            >
+                                <span style={{ fontSize: 15 }}>{bot.icon}</span>
+                                {bot.name}
+                                {(allDocCounts[bot.id] || 0) > 0 && (
+                                    <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        minWidth: 18,
+                                        height: 18,
+                                        padding: '0 5px',
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        color: activeTab === bot.id ? bot.color : 'white',
+                                        background: activeTab === bot.id ? 'white' : '#9ca3af',
+                                        borderRadius: 9,
+                                    }}>
+                                        {allDocCounts[bot.id]}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Active Bot Header */}
@@ -284,31 +373,31 @@ export default function AdminPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '20px 24px',
-                    marginBottom: 20,
+                    padding: '16px 20px',
+                    marginBottom: 16,
                     background: activeBot.bgColor,
-                    borderRadius: 16,
+                    borderRadius: 14,
                     border: `1px solid ${activeBot.color}20`,
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 12,
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
                             background: 'white',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: 24,
+                            fontSize: 20,
                             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                         }}>
                             {activeBot.icon}
                         </div>
                         <div>
-                            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0 }}>
+                            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: 0 }}>
                                 {activeBot.name} Documents
                             </h2>
-                            <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>
+                            <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>
                                 {activeBot.description}
                             </p>
                         </div>
@@ -318,57 +407,42 @@ export default function AdminPage() {
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 8,
-                            padding: '10px 20px',
+                            gap: 6,
+                            padding: '8px 16px',
                             background: activeBot.color,
                             color: 'white',
                             border: 'none',
-                            borderRadius: 10,
-                            fontSize: 14,
+                            borderRadius: 8,
+                            fontSize: 13,
                             fontWeight: 600,
                             cursor: 'pointer',
                             boxShadow: `0 2px 8px ${activeBot.color}40`,
                         }}
                     >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M8 2v12M2 8h12" />
                         </svg>
-                        Upload to {activeBot.name}
+                        Upload
                     </button>
                 </div>
 
                 {/* Stats Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
-                    <div style={{
-                        padding: '16px 20px',
-                        background: 'white',
-                        borderRadius: 12,
-                        border: '1px solid #e5e7eb',
-                    }}>
-                        <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{documents.length}</div>
-                        <div style={{ fontSize: 13, color: '#6b7280' }}>Total Documents</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+                    <div style={{ padding: '14px 16px', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{documents.length}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>Total Documents</div>
                     </div>
-                    <div style={{
-                        padding: '16px 20px',
-                        background: 'white',
-                        borderRadius: 12,
-                        border: '1px solid #e5e7eb',
-                    }}>
-                        <div style={{ fontSize: 24, fontWeight: 700, color: '#166534' }}>
+                    <div style={{ padding: '14px 16px', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#166534' }}>
                             {documents.filter(d => d.status === 'INDEXED').length}
                         </div>
-                        <div style={{ fontSize: 13, color: '#6b7280' }}>Indexed</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>Indexed</div>
                     </div>
-                    <div style={{
-                        padding: '16px 20px',
-                        background: 'white',
-                        borderRadius: 12,
-                        border: '1px solid #e5e7eb',
-                    }}>
-                        <div style={{ fontSize: 24, fontWeight: 700, color: '#854d0e' }}>
+                    <div style={{ padding: '14px 16px', background: 'white', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: '#854d0e' }}>
                             {documents.filter(d => d.status === 'PROCESSING' || d.status === 'PENDING').length}
                         </div>
-                        <div style={{ fontSize: 13, color: '#6b7280' }}>Processing</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>Processing</div>
                     </div>
                 </div>
 
@@ -388,22 +462,22 @@ export default function AdminPage() {
                             </div>
                         ) : documents.length === 0 ? (
                             <div className={styles.empty}>
-                                <div style={{ fontSize: 48, marginBottom: 8 }}>{activeBot.icon}</div>
-                                <p style={{ fontSize: 15, fontWeight: 500, color: '#374151' }}>
-                                    No documents uploaded for {activeBot.name}
+                                <div style={{ fontSize: 40, marginBottom: 4 }}>{activeBot.icon}</div>
+                                <p style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>
+                                    No documents for {activeBot.name}
                                 </p>
-                                <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 16 }}>
+                                <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12 }}>
                                     Upload PDF documents to build this bot&apos;s knowledge base
                                 </p>
                                 <button
                                     onClick={() => setShowUploadModal(true)}
                                     style={{
-                                        padding: '10px 20px',
+                                        padding: '8px 16px',
                                         background: activeBot.color,
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: 8,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                         fontWeight: 600,
                                         cursor: 'pointer',
                                     }}
@@ -442,30 +516,13 @@ export default function AdminPage() {
                                                         <>
                                                             <button
                                                                 onClick={() => handleDelete(doc.id)}
-                                                                style={{
-                                                                    padding: '4px 12px',
-                                                                    background: '#dc2626',
-                                                                    color: 'white',
-                                                                    border: 'none',
-                                                                    borderRadius: 6,
-                                                                    fontSize: 12,
-                                                                    fontWeight: 600,
-                                                                    cursor: 'pointer',
-                                                                }}
+                                                                style={{ padding: '4px 10px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
                                                             >
                                                                 Confirm
                                                             </button>
                                                             <button
                                                                 onClick={() => setDeleteConfirm(null)}
-                                                                style={{
-                                                                    padding: '4px 12px',
-                                                                    background: '#f3f4f6',
-                                                                    color: '#374151',
-                                                                    border: 'none',
-                                                                    borderRadius: 6,
-                                                                    fontSize: 12,
-                                                                    cursor: 'pointer',
-                                                                }}
+                                                                style={{ padding: '4px 10px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
                                                             >
                                                                 Cancel
                                                             </button>
@@ -473,16 +530,7 @@ export default function AdminPage() {
                                                     ) : (
                                                         <button
                                                             onClick={() => setDeleteConfirm(doc.id)}
-                                                            style={{
-                                                                padding: '4px 12px',
-                                                                background: 'white',
-                                                                color: '#dc2626',
-                                                                border: '1px solid #fee2e2',
-                                                                borderRadius: 6,
-                                                                fontSize: 12,
-                                                                fontWeight: 500,
-                                                                cursor: 'pointer',
-                                                            }}
+                                                            style={{ padding: '4px 10px', background: 'white', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
                                                         >
                                                             Delete
                                                         </button>
@@ -504,15 +552,9 @@ export default function AdminPage() {
                     <div className={styles.modal} onClick={e => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <h2>Upload to {activeBot.icon} {activeBot.name}</h2>
-                            <button
-                                className={styles.closeBtn}
-                                onClick={() => setShowUploadModal(false)}
-                            >
-                                ×
-                            </button>
+                            <button className={styles.closeBtn} onClick={() => setShowUploadModal(false)}>×</button>
                         </div>
                         <form onSubmit={handleUpload} className={styles.modalBody}>
-                            {/* Domain indicator */}
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -521,7 +563,7 @@ export default function AdminPage() {
                                 background: activeBot.bgColor,
                                 borderRadius: 8,
                                 marginBottom: 16,
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: 600,
                                 color: activeBot.color,
                             }}>
@@ -529,20 +571,12 @@ export default function AdminPage() {
                             </div>
 
                             <div className={styles.uploadArea}>
-                                <input
-                                    type="file"
-                                    id="file"
-                                    accept=".pdf,.txt,.md"
-                                    onChange={handleFileChange}
-                                    className={styles.fileInput}
-                                />
+                                <input type="file" id="file" accept=".pdf,.txt,.md" onChange={handleFileChange} className={styles.fileInput} />
                                 <label htmlFor="file" className={styles.fileLabel}>
                                     {uploadForm.file ? (
                                         <>
                                             <span className={styles.fileName}>{uploadForm.file.name}</span>
-                                            <span className={styles.fileSize}>
-                                                {(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB
-                                            </span>
+                                            <span className={styles.fileSize}>{(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB</span>
                                         </>
                                     ) : (
                                         <>
@@ -592,11 +626,7 @@ export default function AdminPage() {
                             </div>
 
                             <div className={styles.modalFooter}>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowUploadModal(false)}
-                                >
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowUploadModal(false)}>
                                     Cancel
                                 </button>
                                 <button

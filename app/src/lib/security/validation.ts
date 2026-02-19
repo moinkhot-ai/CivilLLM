@@ -69,7 +69,7 @@ export function sanitizeEmail(input: string): string {
 /**
  * Valid domain IDs for the application
  */
-export const domainIdSchema = z.enum(['site', 'rcc', 'steel', 'safety', 'best']).optional();
+export const domainIdSchema = z.enum(['site', 'rcc', 'steel', 'surveying', 'geotechnical', 'masonry', 'mep', 'roads', 'water', 'qs', 'nbc', 'general', 'best', 'safety']).optional();
 
 /**
  * Email validation schema
