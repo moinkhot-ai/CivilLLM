@@ -517,7 +517,7 @@ function ChatContent() {
                         {showModelSelection ? (
                             <div className="model-selection" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '24px 16px' }}>
                                 <h1 className="welcome-title" style={{ fontSize: 32, fontWeight: 700, color: '#111827', marginBottom: 8, letterSpacing: '-0.02em' }}>Start a New Chat</h1>
-                                <p style={{ fontSize: 16, color: '#6b7280', marginBottom: 32 }}>Choose an AI expert or just start typing</p>
+                                <p style={{ fontSize: 16, color: '#4b5563', marginBottom: 32, fontWeight: 500 }}>Choose an AI expert or just start typing</p>
 
                                 {/* Featured Bots - Best & General */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, maxWidth: 600, width: '100%', marginBottom: 24 }}>
