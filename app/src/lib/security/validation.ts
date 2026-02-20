@@ -9,11 +9,24 @@
  */
 
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
 
 // ============================================
 // Sanitization Utilities
 // ============================================
+
+/**
+ * Strip HTML tags from a string (server-safe, no DOM required)
+ */
+function stripHtml(input: string): string {
+    return input
+        .replace(/<[^>]*>/g, '')         // remove HTML tags
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .replace(/&#x2F;/g, '/');
+}
 
 /**
  * Sanitize text input to prevent XSS attacks
@@ -21,15 +34,7 @@ import DOMPurify from 'isomorphic-dompurify';
  */
 export function sanitizeText(input: string): string {
     if (!input || typeof input !== 'string') return '';
-
-    // Use DOMPurify to strip all HTML (ALLOWED_TAGS: [] means no tags allowed)
-    const sanitized = DOMPurify.sanitize(input, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: [],
-    });
-
-    // Additional cleanup: normalize whitespace, trim
-    return sanitized.trim().replace(/\s+/g, ' ');
+    return stripHtml(input).trim().replace(/\s+/g, ' ');
 }
 
 /**
@@ -38,15 +43,7 @@ export function sanitizeText(input: string): string {
  */
 export function sanitizeTextPreserveFormatting(input: string): string {
     if (!input || typeof input !== 'string') return '';
-
-    // Strip HTML but preserve newlines
-    const sanitized = DOMPurify.sanitize(input, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: [],
-    });
-
-    // Normalize multiple newlines to max 2, trim
-    return sanitized.trim().replace(/\n{3,}/g, '\n\n');
+    return stripHtml(input).trim().replace(/\n{3,}/g, '\n\n');
 }
 
 /**
@@ -54,12 +51,7 @@ export function sanitizeTextPreserveFormatting(input: string): string {
  */
 export function sanitizeEmail(input: string): string {
     if (!input || typeof input !== 'string') return '';
-
-    // Lowercase, trim, remove any HTML
-    return DOMPurify.sanitize(input, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: [],
-    }).toLowerCase().trim();
+    return stripHtml(input).toLowerCase().trim();
 }
 
 // ============================================
