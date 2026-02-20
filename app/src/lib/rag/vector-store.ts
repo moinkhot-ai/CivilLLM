@@ -7,9 +7,17 @@ import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy OpenAI client — only created when actually needed
+// DO NOT instantiate at module top level (crashes if API key missing)
+let _openai: OpenAI | null = null;
+function getOpenAIClient(): OpenAI {
+    if (!_openai) {
+        const key = process.env.OPENAI_API_KEY;
+        if (!key) throw new Error('OPENAI_API_KEY is not set');
+        _openai = new OpenAI({ apiKey: key });
+    }
+    return _openai;
+}
 
 interface ChunkData {
     id: string;
@@ -74,7 +82,7 @@ class VectorStore {
      */
     private async getEmbedding(text: string): Promise<number[]> {
         try {
-            const response = await openai.embeddings.create({
+            const response = await getOpenAIClient().embeddings.create({
                 model: 'text-embedding-3-small',
                 input: text.substring(0, 8000),
             });
