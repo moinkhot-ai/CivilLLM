@@ -126,9 +126,12 @@ export async function POST(request: NextRequest) {
             citations: response.citations || [],
         });
     } catch (error) {
-        console.error('Chat API error:', error);
+        const errMsg = error instanceof Error ? error.message : String(error);
+        const errStack = error instanceof Error ? error.stack : '';
+        console.error('Chat API error:', errMsg);
+        console.error('Stack:', errStack);
         return NextResponse.json(
-            { error: 'Failed to get AI response. Please try again.' },
+            { error: 'Failed to get AI response. Please try again.', detail: errMsg },
             { status: 500 }
         );
     }
