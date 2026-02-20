@@ -376,15 +376,19 @@ function ChatContent() {
                 }),
             });
             const data = await response.json();
+            const content = response.ok
+                ? data.answer
+                : (data.error || `Server error (${response.status}). Please try again.`);
             setMessages(prev => [...prev, {
                 id: `assistant-${Date.now()}`,
                 conversationId: 'demo',
                 role: 'assistant',
-                content: response.ok ? data.answer : (data.error || 'Sorry, something went wrong.'),
+                content,
                 createdAt: new Date(),
             }]);
-        } catch {
-            setMessages(prev => [...prev, { id: `error-${Date.now()}`, conversationId: 'demo', role: 'assistant', content: 'Network error.', createdAt: new Date() }]);
+        } catch (err) {
+            console.error('Chat error:', err);
+            setMessages(prev => [...prev, { id: `error-${Date.now()}`, conversationId: 'demo', role: 'assistant', content: 'Something went wrong. Please check your connection and try again.', createdAt: new Date() }]);
         } finally {
             setIsLoading(false);
         }

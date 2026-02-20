@@ -25,11 +25,24 @@ const authenticatedLimiter = createRateLimiter(RATE_LIMITS.CHAT.authenticated);
 // ============================================
 
 const DOMAIN_CONTEXTS: Record<string, string> = {
-    site: 'Site engineering, earthwork, surveying, and construction site management',
-    rcc: 'RCC (Reinforced Cement Concrete) design, IS 456 codes, structural analysis',
-    steel: 'Steel structures, IS 800 codes, connections, and fabrication',
+    // Featured
+    general: 'General civil engineering queries and IS code guidance',
+    best: 'General civil engineering across all domains — auto-selects the best expert',
+    // Primary
+    rcc: 'RCC (Reinforced Cement Concrete) design, IS 456:2000 codes, structural analysis, beam/column/slab design',
+    steel: 'Structural steel design, IS 800:2007 codes, connections, fabrication, and erection',
+    site: 'Site engineering, site execution, curing, concreting, quality control on site',
+    surveying: 'Land surveying, setting out, leveling, theodolite, total station, GPS, contour mapping',
+    // Specialty
+    geotechnical: 'Geotechnical engineering, soil mechanics, foundation design, bearing capacity, pile foundations',
+    masonry: 'Brick and block masonry, mortar mixes, pointing, plastering, IS 1905 codes',
+    mep: 'Mechanical, Electrical, and Plumbing systems in buildings — HVAC, drainage, sanitary, wiring',
+    roads: 'Road and highway design, pavement design, IRC codes, bitumen, asphalt, camber, drainage',
+    water: 'Water supply, sewage, sewerage systems, STP, WTP, overhead tanks, pipeline design',
+    qs: 'Quantity surveying, BOQ preparation, estimation, costing, measurement, tender documents',
+    nbc: 'National Building Code compliance, fire safety, PPE, hazard management, building regulations',
+    // Legacy
     safety: 'Construction safety, NBC 2016, fire safety, and compliance',
-    best: 'General civil engineering across all domains',
 };
 
 // ============================================
